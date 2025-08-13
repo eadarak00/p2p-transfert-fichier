@@ -347,7 +347,7 @@ public class Peer {
     /**
      * Mise à jour complète du cache des fichiers
      */
-    private void mettreAJourCacheComplet() {
+    public void mettreAJourCacheComplet() {
         if (!actif)
             return;
 
