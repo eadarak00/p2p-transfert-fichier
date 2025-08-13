@@ -1,7 +1,5 @@
 package entities;
 
-
-
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -11,7 +9,8 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- * Classe Peer refactorisée avec architecture moderne et gestion d'erreurs robuste
+ * Classe Peer refactorisée avec architecture moderne et gestion d'erreurs
+ * robuste
  */
 public class Peer {
     private final String pseudo;
@@ -41,11 +40,11 @@ public class Peer {
         this.pseudo = validateString(pseudo, "Pseudo");
         this.portEcoute = validatePort(portEcoute);
         this.dossierPartage = new File(dossierPartage);
-        
+
         if (!this.dossierPartage.exists()) {
             this.dossierPartage.mkdirs();
         }
-        
+
         this.fileManager = new FileManager(this.dossierPartage.getPath());
     }
 
@@ -81,16 +80,16 @@ public class Peer {
      */
     public void arreter() {
         logInfo("Arrêt du peer '" + pseudo + "'...");
-        
+
         actif = false;
-        
+
         // Arrêter les services dans l'ordre
         shutdownExecutor(schedulerMaintenance, "Scheduler de maintenance", 2);
         shutdownExecutor(executorPrincipal, "Executor principal", 5);
-        
+
         // Fermer le socket serveur
         closeResource(serverSocket, "Socket serveur");
-        
+
         logInfo("Peer '" + pseudo + "' arrêté");
     }
 
@@ -100,15 +99,15 @@ public class Peer {
     private void programmerTachesMaintenance() {
         // Synchronisation des peers (toutes les 15 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-            this::synchroniserPeersSilencieux, 15, 15, TimeUnit.SECONDS);
-        
+                this::synchroniserPeersSilencieux, 15, 15, TimeUnit.SECONDS);
+
         // Nettoyage des peers inactifs (toutes les 45 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-            this::nettoyerPeersInactifs, 45, 45, TimeUnit.SECONDS);
-        
+                this::nettoyerPeersInactifs, 45, 45, TimeUnit.SECONDS);
+
         // Mise à jour du cache des fichiers (toutes les 30 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-            this::mettreAJourCacheComplet, 30, 30, TimeUnit.SECONDS);
+                this::mettreAJourCacheComplet, 30, 30, TimeUnit.SECONDS);
     }
 
     /**
@@ -116,7 +115,7 @@ public class Peer {
      */
     private void ecouterConnexions() {
         logInfo("Serveur d'écoute démarré");
-        
+
         while (actif && !serverSocket.isClosed()) {
             try {
                 Socket clientSocket = serverSocket.accept();
@@ -134,67 +133,48 @@ public class Peer {
      */
 
     private void traiterRequetePeer(Socket clientSocket) {
-    try {
-        clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
+        try {
+            clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             InputStream socketIn = clientSocket.getInputStream();
-             OutputStream socketOut = clientSocket.getOutputStream()) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    InputStream socketIn = clientSocket.getInputStream();
+                    OutputStream socketOut = clientSocket.getOutputStream()) {
 
-            String commande = in.readLine();
-            if (commande == null) return;
+                String commande = in.readLine();
+                if (commande == null)
+                    return;
 
-            logDebug("Requête reçue: " + commande);
+                logDebug("Requête reçue: " + commande);
 
-            String[] parts = commande.split(" ", 4);
-            String cmd = parts[0].toUpperCase();
+                String[] parts = commande.split(" ", 4);
+                String cmd = parts[0].toUpperCase();
 
-            switch (cmd) {
-                case "PING": handlePing(out); break;
-                case "LIST": handleListFiles(socketOut); break;
-                case "GET": handleGetFile(parts, socketOut, out); break;
-                case "PEERS": handleGetPeers(socketOut); break;
-                case "ANNOUNCE": handleAnnounce(parts, clientSocket, out); break;
-                default: out.println("ERREUR: commande inconnue");
+                switch (cmd) {
+                    case "PING":
+                        handlePing(out);
+                        break;
+                    case "LIST":
+                        handleListFiles(socketOut);
+                        break;
+                    case "GET":
+                        handleGetFile(parts, socketOut, out);
+                        break;
+                    case "PEERS":
+                        handleGetPeers(socketOut);
+                        break;
+                    case "ANNOUNCE":
+                        handleAnnounce(parts, clientSocket, out);
+                        break;
+                    default:
+                        out.println("ERREUR: commande inconnue");
+                }
             }
+
+        } catch (Exception e) {
+            logError("Erreur lors du traitement d'une requête", e);
         }
-
-    } catch (Exception e) {
-        logError("Erreur lors du traitement d'une requête", e);
     }
-}
-
-    // private void traiterRequetePeer(Socket clientSocket) {
-    //     try (clientSocket;
-    //          BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-    //          PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-    //          InputStream socketIn = clientSocket.getInputStream();
-    //          OutputStream socketOut = clientSocket.getOutputStream()) {
-
-    //         clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
-    //         String commande = in.readLine();
-            
-    //         if (commande == null) return;
-
-    //         logDebug("Requête reçue: " + commande);
-            
-    //         String[] parts = commande.split(" ", 4);
-    //         String cmd = parts[0].toUpperCase();
-
-    //         switch (cmd) {
-    //             case "PING" -> handlePing(out);
-    //             case "LIST" -> handleListFiles(socketOut);
-    //             case "GET" -> handleGetFile(parts, socketOut, out);
-    //             case "PEERS" -> handleGetPeers(socketOut);
-    //             case "ANNOUNCE" -> handleAnnounce(parts, clientSocket, out);
-    //             default -> out.println("ERREUR: commande inconnue");
-    //         }
-
-    //     } catch (Exception e) {
-    //         logError("Erreur lors du traitement d'une requête", e);
-    //     }
-    // }
 
     // Handlers pour les différentes commandes
     private void handlePing(PrintWriter out) {
@@ -222,7 +202,7 @@ public class Peer {
 
         String nomFichier = parts[1];
         long offset = parts.length >= 3 ? parseOffset(parts[2]) : 0;
-        
+
         envoyerFichier(nomFichier, socketOut, out, offset);
     }
 
@@ -265,29 +245,30 @@ public class Peer {
      */
     private void decouvriePeers() {
         logInfo("Démarrage de la découverte de peers...");
-        
+
         CompletableFuture.runAsync(() -> {
             int peersInitiaux = peersConnus.size();
             List<CompletableFuture<Void>> taches = new ArrayList<>();
 
             // Scanner les ports de manière asynchrone
             for (int port = 8000; port <= 8100; port++) {
-                if (port == portEcoute) continue;
-                
+                if (port == portEcoute)
+                    continue;
+
                 final int finalPort = port;
                 CompletableFuture<Void> tache = CompletableFuture.runAsync(() -> {
                     if (testerConnexionPeer("localhost", finalPort)) {
                         ajouterPeerSilencieux(new PeerInfo("localhost", finalPort, ""));
                     }
                 }, executorPrincipal);
-                
+
                 taches.add(tache);
             }
 
             // Attendre toutes les tâches avec timeout
             CompletableFuture<Void> toutesLesTaches = CompletableFuture.allOf(
-                taches.toArray(new CompletableFuture[0]));
-            
+                    taches.toArray(new CompletableFuture[0]));
+
             try {
                 toutesLesTaches.get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
@@ -305,7 +286,8 @@ public class Peer {
      * Synchronisation silencieuse avec les peers connus
      */
     private void synchroniserPeersSilencieux() {
-        if (!actif) return;
+        if (!actif)
+            return;
 
         Set<PeerInfo> nouveauxPeers = Collections.synchronizedSet(new HashSet<>());
         List<CompletableFuture<Void>> tachesSynchronisation = new ArrayList<>();
@@ -320,43 +302,44 @@ public class Peer {
                     logDebug("Erreur de sync avec " + peer + ": " + e.getMessage());
                 }
             }, executorPrincipal);
-            
+
             tachesSynchronisation.add(tache);
         }
 
         // Attendre toutes les synchronisations avec timeout
         CompletableFuture.allOf(tachesSynchronisation.toArray(new CompletableFuture[0]))
-            .orTimeout(15, TimeUnit.SECONDS)
-            .whenComplete((result, throwable) -> {
-                // Ajouter les nouveaux peers découverts
-                for (PeerInfo nouveauPeer : nouveauxPeers) {
-                    if (!estPeerLocal(nouveauPeer)) {
-                        ajouterPeerSilencieux(nouveauPeer);
+                .orTimeout(15, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    // Ajouter les nouveaux peers découverts
+                    for (PeerInfo nouveauPeer : nouveauxPeers) {
+                        if (!estPeerLocal(nouveauPeer)) {
+                            ajouterPeerSilencieux(nouveauPeer);
+                        }
                     }
-                }
-            });
+                });
     }
 
     /**
      * Nettoyage des peers inactifs
      */
     private void nettoyerPeersInactifs() {
-        if (!actif) return;
+        if (!actif)
+            return;
 
         List<PeerInfo> peersASupprimer = peersConnus.stream()
-            .filter(peer -> !peer.estActif(PEER_TIMEOUT_MS))
-            .filter(peer -> !testerConnexionPeer(peer.getAdresse(), peer.getPort()))
-            .collect(Collectors.toList());
+                .filter(peer -> !peer.estActif(PEER_TIMEOUT_MS))
+                .filter(peer -> !testerConnexionPeer(peer.getAdresse(), peer.getPort()))
+                .collect(Collectors.toList());
 
         if (!peersASupprimer.isEmpty()) {
             peersConnus.removeAll(peersASupprimer);
-            
+
             // Nettoyer le cache
             peersASupprimer.forEach(peer -> {
                 String cle = peer.getAdresse() + ":" + peer.getPort();
                 cacheFichiersPeers.remove(cle);
             });
-            
+
             logDebug("Nettoyé " + peersASupprimer.size() + " peer(s) inactif(s)");
         }
     }
@@ -365,22 +348,22 @@ public class Peer {
      * Mise à jour complète du cache des fichiers
      */
     private void mettreAJourCacheComplet() {
-        if (!actif) return;
+        if (!actif)
+            return;
 
         List<CompletableFuture<Void>> tachesMiseAJour = peersConnus.stream()
-            .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
-            .map(peer -> CompletableFuture.runAsync(() -> 
-                mettreAJourCachePeer(peer), executorPrincipal))
-            .collect(Collectors.toList());
+                .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
+                .map(peer -> CompletableFuture.runAsync(() -> mettreAJourCachePeer(peer), executorPrincipal))
+                .collect(Collectors.toList());
 
         // Exécuter toutes les mises à jour en parallèle avec timeout
         CompletableFuture.allOf(tachesMiseAJour.toArray(new CompletableFuture[0]))
-            .orTimeout(20, TimeUnit.SECONDS)
-            .whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    logDebug("Timeout lors de la mise à jour du cache");
-                }
-            });
+                .orTimeout(20, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        logDebug("Timeout lors de la mise à jour du cache");
+                    }
+                });
     }
 
     /**
@@ -390,10 +373,10 @@ public class Peer {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(adresse, port), 2000);
             socket.setSoTimeout(2000);
-            
+
             try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
                 out.println("PING");
                 String reponse = in.readLine();
                 return reponse != null && reponse.startsWith("PONG");
@@ -409,13 +392,13 @@ public class Peer {
     private void annoncerAuPeer(PeerInfo peer) throws IOException {
         try (Socket socket = new Socket(peer.getAdresse(), peer.getPort())) {
             socket.setSoTimeout(SOCKET_TIMEOUT_MS);
-            
+
             try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
                 out.println("ANNOUNCE " + pseudo + " " + portEcoute);
                 String reponse = in.readLine();
-                
+
                 if (reponse != null && reponse.startsWith("OK")) {
                     peer.updatePing();
                 }
@@ -428,17 +411,17 @@ public class Peer {
      */
     private Set<PeerInfo> recupererPeersDuPeer(PeerInfo peer) {
         Set<PeerInfo> peersDistants = new HashSet<>();
-        
+
         try (Socket socket = new Socket(peer.getAdresse(), peer.getPort())) {
             socket.setSoTimeout(SOCKET_TIMEOUT_MS);
-            
+
             try (OutputStream out = socket.getOutputStream();
-                 InputStream in = socket.getInputStream()) {
-                
+                    InputStream in = socket.getInputStream()) {
+
                 // Envoyer commande PEERS
                 out.write("PEERS\n".getBytes(StandardCharsets.UTF_8));
                 out.flush();
-                
+
                 // Lire réponse binaire
                 byte[] data = lireDonneesBinaires(in);
                 if (data.length > 0) {
@@ -449,7 +432,7 @@ public class Peer {
         } catch (Exception e) {
             logDebug("Erreur lors de la récupération des peers de " + peer + ": " + e.getMessage());
         }
-        
+
         return peersDistants;
     }
 
@@ -459,14 +442,14 @@ public class Peer {
     private void mettreAJourCachePeer(PeerInfo peer) {
         try (Socket socket = new Socket(peer.getAdresse(), peer.getPort())) {
             socket.setSoTimeout(SOCKET_TIMEOUT_MS);
-            
+
             try (OutputStream out = socket.getOutputStream();
-                 InputStream in = socket.getInputStream()) {
-                
+                    InputStream in = socket.getInputStream()) {
+
                 // Envoyer commande LIST
                 out.write("LIST\n".getBytes(StandardCharsets.UTF_8));
                 out.flush();
-                
+
                 // Lire réponse binaire
                 byte[] data = lireDonneesBinaires(in);
                 if (data.length > 0) {
@@ -482,44 +465,44 @@ public class Peer {
 
     // ==================== MÉTHODES PUBLIQUES ====================
 
-    /**
-     * Recherche un fichier sur le réseau
-     */
-    public List<PeerInfo> rechercherFichier(String nomFichier) {
-        return peersConnus.stream()
-            .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
-            .filter(peer -> {
-                String clePeer = peer.getAdresse() + ":" + peer.getPort();
-                List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
-                return fichiers != null && fichiers.stream()
-                    .anyMatch(meta -> meta.getNom().equals(nomFichier));
-            })
-            .collect(Collectors.toList());
-    }
+    // /**
+    // * Recherche un fichier sur le réseau
+    // */
+    // public List<PeerInfo> rechercherFichier(String nomFichier) {
+    // return peersConnus.stream()
+    // .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
+    // .filter(peer -> {
+    // String clePeer = peer.getAdresse() + ":" + peer.getPort();
+    // List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
+    // return fichiers != null && fichiers.stream()
+    // .anyMatch(meta -> meta.getNom().equals(nomFichier));
+    // })
+    // .collect(Collectors.toList());
+    // }
 
     /**
      * Télécharge un fichier depuis le réseau
      */
-    public boolean telechargerFichier(String nomFichier) {
-        List<PeerInfo> peersAvecFichier = rechercherFichier(nomFichier);
-        
-        if (peersAvecFichier.isEmpty()) {
-            logInfo("Fichier '" + nomFichier + "' introuvable sur le réseau");
-            return false;
-        }
-        
-        logInfo("Fichier trouvé chez " + peersAvecFichier.size() + " peer(s)");
-        
-        for (PeerInfo peer : peersAvecFichier) {
-            logInfo("Tentative de téléchargement depuis " + peer);
-            if (telechargerDepuisPeer(peer, nomFichier)) {
-                return true;
-            }
-        }
-        
-        logInfo("Échec du téléchargement depuis tous les peers");
-        return false;
-    }
+    // public boolean telechargerFichier(String nomFichier) {
+    // List<PeerInfo> peersAvecFichier = rechercherFichier(nomFichier);
+
+    // if (peersAvecFichier.isEmpty()) {
+    // logInfo("Fichier '" + nomFichier + "' introuvable sur le réseau");
+    // return false;
+    // }
+
+    // logInfo("Fichier trouvé chez " + peersAvecFichier.size() + " peer(s)");
+
+    // for (PeerInfo peer : peersAvecFichier) {
+    // logInfo("Tentative de téléchargement depuis " + peer);
+    // if (telechargerDepuisPeer(peer, nomFichier)) {
+    // return true;
+    // }
+    // }
+
+    // logInfo("Échec du téléchargement depuis tous les peers");
+    // return false;
+    // }
 
     /**
      * Télécharge un fichier depuis un peer spécifique
@@ -534,28 +517,29 @@ public class Peer {
 
         try (Socket socket = new Socket(peer.getAdresse(), peer.getPort())) {
             socket.setSoTimeout(30000);
-            
+
             try (InputStream socketIn = socket.getInputStream();
-                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-                
+                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+
                 out.println("GET " + nomFichier + " 0");
-                
+
                 String checksumServeur = lireLigne(socketIn);
                 if (checksumServeur == null || checksumServeur.startsWith("ERREUR")) {
                     logError("Erreur lors de la demande du fichier: " + checksumServeur);
                     return false;
                 }
-                
+
                 String tailleStr = lireLigne(socketIn);
-                if (tailleStr == null) return false;
-                
+                if (tailleStr == null)
+                    return false;
+
                 long tailleFichier = Long.parseLong(tailleStr);
-                
+
                 // Télécharger le fichier
                 try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fichierLocal))) {
                     copierAvecProgression(socketIn, bos, tailleFichier, nomFichier);
                 }
-                
+
                 // Vérifier l'intégrité
                 if (verifierIntegriteFichier(fichierLocal, checksumServeur)) {
                     logInfo("Fichier téléchargé avec succès: " + fichierLocal.getName());
@@ -583,7 +567,7 @@ public class Peer {
             logInfo("Impossible de s'ajouter soi-même comme peer");
             return;
         }
-        
+
         if (ajouterPeerSilencieux(peerInfo)) {
             logInfo("Nouveau peer ajouté: " + peerInfo);
         } else {
@@ -596,7 +580,7 @@ public class Peer {
      */
     public void synchroniserMaintenant() {
         logInfo("Synchronisation manuelle déclenchée...");
-        
+
         CompletableFuture.runAsync(() -> {
             synchroniserPeersSilencieux();
             logInfo("Synchronisation terminée. Total: " + peersConnus.size() + " peers");
@@ -616,8 +600,8 @@ public class Peer {
             int nbFichiers = fichiers != null ? fichiers.size() : 0;
             long inactiviteMs = System.currentTimeMillis() - peer.getDernierePing();
             String statut = peer.estActif(PEER_TIMEOUT_MS) ? "ACTIF" : "INACTIF";
-            System.out.println("  - " + peer + " (" + nbFichiers + " fichiers) [" 
-                + statut + " - " + (inactiviteMs / 1000) + "s]");
+            System.out.println("  - " + peer + " (" + nbFichiers + " fichiers) ["
+                    + statut + " - " + (inactiviteMs / 1000) + "s]");
         }
 
         List<File> mesFichiers = fileManager.listerFichiers();
@@ -632,30 +616,31 @@ public class Peer {
 
     public void afficherFichiersDisponibles() {
         System.out.println("\n=== Fichiers disponibles sur le réseau ===");
-        
+
         Map<String, List<PeerInfo>> fichiersParNom = new HashMap<>();
-        
+
         for (PeerInfo peer : peersConnus) {
-            if (!peer.estActif(PEER_TIMEOUT_MS)) continue;
-            
+            if (!peer.estActif(PEER_TIMEOUT_MS))
+                continue;
+
             String clePeer = peer.getAdresse() + ":" + peer.getPort();
             List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
-            
+
             if (fichiers != null) {
                 for (Metadata meta : fichiers) {
                     fichiersParNom.computeIfAbsent(meta.getNom(), k -> new ArrayList<>()).add(peer);
                 }
             }
         }
-        
+
         if (fichiersParNom.isEmpty()) {
             System.out.println("Aucun fichier disponible sur le réseau");
         } else {
             fichiersParNom.forEach((nomFichier, peers) -> {
                 System.out.print("  - " + nomFichier + " (disponible chez " + peers.size() + " peer(s): ");
                 String pseudos = peers.stream()
-                    .map(PeerInfo::getPseudo)
-                    .collect(Collectors.joining(", "));
+                        .map(PeerInfo::getPseudo)
+                        .collect(Collectors.joining(", "));
                 System.out.println(pseudos + ")");
             });
         }
@@ -665,12 +650,13 @@ public class Peer {
     // ==================== MÉTHODES UTILITAIRES ====================
 
     private boolean ajouterPeerSilencieux(PeerInfo peerInfo) {
-        if (estPeerLocal(peerInfo)) return false;
-        
+        if (estPeerLocal(peerInfo))
+            return false;
+
         Optional<PeerInfo> existant = peersConnus.stream()
-            .filter(p -> p.equals(peerInfo))
-            .findFirst();
-            
+                .filter(p -> p.equals(peerInfo))
+                .findFirst();
+
         if (existant.isPresent()) {
             existant.get().updatePing();
             if (peerInfo.getPseudo() != null && !peerInfo.getPseudo().isEmpty()) {
@@ -685,30 +671,30 @@ public class Peer {
     }
 
     private boolean estPeerLocal(PeerInfo peer) {
-        return (peer.getAdresse().equals("localhost") || peer.getAdresse().equals("127.0.0.1")) 
-            && peer.getPort() == this.portEcoute;
+        return (peer.getAdresse().equals("localhost") || peer.getAdresse().equals("127.0.0.1"))
+                && peer.getPort() == this.portEcoute;
     }
 
     private List<PeerInfo> filtrerPeersActifs() {
         return peersConnus.stream()
-            .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
-            .filter(peer -> !estPeerLocal(peer))
-            .filter(peer -> peer.getPseudo() != null && !peer.getPseudo().trim().isEmpty())
-            .collect(Collectors.toList());
+                .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
+                .filter(peer -> !estPeerLocal(peer))
+                .filter(peer -> peer.getPseudo() != null && !peer.getPseudo().trim().isEmpty())
+                .collect(Collectors.toList());
     }
 
     private List<Metadata> collecterMetadatasFichiers() {
         return fileManager.listerFichiers().stream()
-            .filter(File::isFile)
-            .map(this::creerMetadata)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .filter(File::isFile)
+                .map(this::creerMetadata)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private Metadata creerMetadata(File fichier) {
         try {
-            return new Metadata(fichier.getName(), fichier.length(), 
-                fileManager.calculerChecksum(fichier));
+            return new Metadata(fichier.getName(), fichier.length(),
+                    fileManager.calculerChecksum(fichier));
         } catch (Exception e) {
             logError("Erreur lors de la création des métadonnées pour " + fichier.getName(), e);
             return null;
@@ -760,24 +746,24 @@ public class Peer {
         destination.flush();
     }
 
-    private void copierAvecProgression(InputStream source, OutputStream destination, 
-                                     long taille, String nomFichier) throws IOException {
+    private void copierAvecProgression(InputStream source, OutputStream destination,
+            long taille, String nomFichier) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         long totalLu = 0;
         int lu;
 
-        while (totalLu < taille && (lu = source.read(buffer, 0, 
-               (int) Math.min(buffer.length, taille - totalLu))) != -1) {
+        while (totalLu < taille && (lu = source.read(buffer, 0,
+                (int) Math.min(buffer.length, taille - totalLu))) != -1) {
             destination.write(buffer, 0, lu);
             totalLu += lu;
-            
+
             // Afficher progression pour gros fichiers
             if (taille > 1024 * 1024 && totalLu % (1024 * 1024) == 0) {
                 int progression = (int) ((totalLu * 100) / taille);
                 System.out.print("\rTéléchargement " + nomFichier + ": " + progression + "%");
             }
         }
-        
+
         if (taille > 1024 * 1024) {
             System.out.println(); // Nouvelle ligne après progression
         }
@@ -814,7 +800,7 @@ public class Peer {
     private byte[] serialiserListeMetadata(List<Metadata> metadatas) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             writeInt(bos, metadatas.size());
-            
+
             for (Metadata meta : metadatas) {
                 if (meta != null) {
                     byte[] metaData = meta.serialiser();
@@ -824,7 +810,7 @@ public class Peer {
                     writeInt(bos, 0);
                 }
             }
-            
+
             return bos.toByteArray();
         } catch (IOException e) {
             logError("Erreur lors de la sérialisation des métadonnées", e);
@@ -838,27 +824,28 @@ public class Peer {
         }
 
         List<Metadata> metadatas = new ArrayList<>();
-        
+
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data)) {
             int count = readInt(bis);
             if (count < 0 || count > 10000) {
                 throw new IOException("Nombre de métadonnées invalide: " + count);
             }
-            
+
             for (int i = 0; i < count; i++) {
                 int metaDataLen = readInt(bis);
-                
-                if (metaDataLen == 0) continue;
-                
+
+                if (metaDataLen == 0)
+                    continue;
+
                 if (metaDataLen < 0 || metaDataLen > 100000) {
                     throw new IOException("Longueur de métadonnées invalide: " + metaDataLen);
                 }
-                
+
                 byte[] metaData = new byte[metaDataLen];
                 if (bis.read(metaData) != metaDataLen) {
                     throw new IOException("Impossible de lire les métadonnées " + i);
                 }
-                
+
                 try {
                     Metadata meta = Metadata.deserialiser(metaData);
                     metadatas.add(meta);
@@ -869,7 +856,7 @@ public class Peer {
         } catch (IOException e) {
             logError("Erreur lors de la désérialisation des métadonnées", e);
         }
-        
+
         return metadatas;
     }
 
@@ -890,14 +877,15 @@ public class Peer {
         if (in.read(lengthBytes) != 4) {
             throw new IOException("Impossible de lire la longueur");
         }
-        
+
         int length = ByteBuffer.wrap(lengthBytes).getInt();
         if (length < 0 || length > 10_000_000) { // 10MB max
             throw new IOException("Longueur de données invalide: " + length);
         }
-        
-        if (length == 0) return new byte[0];
-        
+
+        if (length == 0)
+            return new byte[0];
+
         byte[] data = new byte[length];
         int totalRead = 0;
         while (totalRead < length) {
@@ -907,7 +895,7 @@ public class Peer {
             }
             totalRead += read;
         }
-        
+
         return data;
     }
 
@@ -915,7 +903,8 @@ public class Peer {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int b;
         while ((b = in.read()) != -1) {
-            if (b == '\n') break;
+            if (b == '\n')
+                break;
             buffer.write(b);
         }
         return buffer.toString("UTF-8").trim();
@@ -928,7 +917,7 @@ public class Peer {
         buffer.putInt(value);
         os.write(buffer.array());
     }
-    
+
     private static int readInt(InputStream is) throws IOException {
         byte[] buffer = new byte[4];
         if (is.read(buffer) != 4) {
@@ -946,9 +935,12 @@ public class Peer {
     }
 
     private String formatTaille(long octets) {
-        if (octets < 1024) return octets + " B";
-        if (octets < 1024 * 1024) return String.format("%.1f KB", octets / 1024.0);
-        if (octets < 1024 * 1024 * 1024) return String.format("%.1f MB", octets / (1024.0 * 1024));
+        if (octets < 1024)
+            return octets + " B";
+        if (octets < 1024 * 1024)
+            return String.format("%.1f KB", octets / 1024.0);
+        if (octets < 1024 * 1024 * 1024)
+            return String.format("%.1f MB", octets / (1024.0 * 1024));
         return String.format("%.1f GB", octets / (1024.0 * 1024 * 1024));
     }
 
@@ -1022,11 +1014,25 @@ public class Peer {
 
     // ==================== GETTERS ====================
 
-    public String getPseudo() { return pseudo; }
-    public int getPort() { return portEcoute; }
-    public List<PeerInfo> getPeersConnus() { return new ArrayList<>(peersConnus); }
-    public File getDossierPartage() { return dossierPartage; }
-    public boolean estActif() { return actif; }
+    public String getPseudo() {
+        return pseudo;
+    }
+
+    public int getPort() {
+        return portEcoute;
+    }
+
+    public List<PeerInfo> getPeersConnus() {
+        return new ArrayList<>(peersConnus);
+    }
+
+    public File getDossierPartage() {
+        return dossierPartage;
+    }
+
+    public boolean estActif() {
+        return actif;
+    }
 
     /**
      * Obtient des statistiques sur le peer
@@ -1038,7 +1044,7 @@ public class Peer {
         stats.put("actif", actif);
         stats.put("peers_connus", peersConnus.size());
         stats.put("peers_actifs", peersConnus.stream()
-            .mapToInt(p -> p.estActif(PEER_TIMEOUT_MS) ? 1 : 0).sum());
+                .mapToInt(p -> p.estActif(PEER_TIMEOUT_MS) ? 1 : 0).sum());
         stats.put("fichiers_partages", fileManager.listerFichiers().size());
         stats.put("cache_fichiers_peers", cacheFichiersPeers.size());
         return stats;
@@ -1049,41 +1055,214 @@ public class Peer {
      */
     public void testerConnectivite() {
         System.out.println("\n=== Test de connectivité ===");
-        
+
         if (peersConnus.isEmpty()) {
             System.out.println("Aucun peer connu pour tester la connectivité");
             return;
         }
-        
+
         List<CompletableFuture<Boolean>> tests = peersConnus.stream()
-            .map(peer -> CompletableFuture.supplyAsync(() -> {
-                System.out.print("Test de " + peer + "... ");
-                boolean connecte = testerConnexionPeer(peer.getAdresse(), peer.getPort());
-                System.out.println(connecte ? "OK" : "ECHEC");
-                if (connecte) peer.updatePing();
-                return connecte;
-            }, executorPrincipal))
-            .collect(Collectors.toList());
+                .map(peer -> CompletableFuture.supplyAsync(() -> {
+                    System.out.print("Test de " + peer + "... ");
+                    boolean connecte = testerConnexionPeer(peer.getAdresse(), peer.getPort());
+                    System.out.println(connecte ? "OK" : "ECHEC");
+                    if (connecte)
+                        peer.updatePing();
+                    return connecte;
+                }, executorPrincipal))
+                .collect(Collectors.toList());
 
         // Attendre tous les tests
         CompletableFuture.allOf(tests.toArray(new CompletableFuture[0]))
-            .orTimeout(10, TimeUnit.SECONDS)
-            .thenRun(() -> {
-                long peersActifs = tests.stream()
-                    .mapToLong(future -> {
-                        try {
-                            return future.get() ? 1 : 0;
-                        } catch (Exception e) {
-                            return 0;
-                        }
-                    }).sum();
-                System.out.println("Résultat: " + peersActifs + "/" + peersConnus.size() + " peers actifs");
-                System.out.println("============================\n");
-            })
-            .exceptionally(throwable -> {
-                System.out.println("Timeout lors des tests de connectivité");
-                System.out.println("============================\n");
-                return null;
-            });
+                .orTimeout(10, TimeUnit.SECONDS)
+                .thenRun(() -> {
+                    long peersActifs = tests.stream()
+                            .mapToLong(future -> {
+                                try {
+                                    return future.get() ? 1 : 0;
+                                } catch (Exception e) {
+                                    return 0;
+                                }
+                            }).sum();
+                    System.out.println("Résultat: " + peersActifs + "/" + peersConnus.size() + " peers actifs");
+                    System.out.println("============================\n");
+                })
+                .exceptionally(throwable -> {
+                    System.out.println("Timeout lors des tests de connectivité");
+                    System.out.println("============================\n");
+                    return null;
+                });
+    }
+
+    // /**
+    // * Liste les fichiers disponibles sur un peer distant
+    // * @param ip Adresse IP du peer distant
+    // * @param port Port du peer distant
+    // * @return Liste des métadonnées des fichiers disponibles ou null en cas
+    // d'erreur
+    // */
+    // public List<Metadata> listerFichiersPeerDistant(String ip, int port) {
+    // try (Socket socket = new Socket(ip, port)) {
+    // socket.setSoTimeout(SOCKET_TIMEOUT_MS);
+
+    // try (OutputStream out = socket.getOutputStream();
+    // InputStream in = socket.getInputStream()) {
+
+    // // Envoyer commande LIST
+    // out.write("LIST\n".getBytes(StandardCharsets.UTF_8));
+    // out.flush();
+
+    // // Lire réponse binaire
+    // byte[] data = lireDonneesBinaires(in);
+    // if (data.length > 0) {
+    // return deserialiserListeMetadata(data);
+    // }
+    // }
+    // } catch (Exception e) {
+    // logError("Erreur lors de la récupération des fichiers du peer " + ip + ":" +
+    // port, e);
+    // }
+    // return null;
+    // }
+
+    /**
+     * Télécharge un fichier depuis un peer spécifique
+     * 
+     * @param filename Nom du fichier à télécharger
+     * @param ip       Adresse IP du peer distant
+     * @param port     Port du peer distant
+     * @return true si le téléchargement a réussi, false sinon
+     */
+    public boolean telechargerFichierDepuisPeer(String filename, String ip, int port) {
+        // Créer un PeerInfo temporaire pour utiliser la méthode existante
+        PeerInfo peer = new PeerInfo(ip, port, "");
+        return telechargerDepuisPeer(peer, filename);
+    }
+
+    // /**
+    // * Recherche un fichier sur le réseau (méthode existante déjà implémentée)
+    // * @param filename Nom du fichier à rechercher
+    // * @return Liste des peers possédant le fichier
+    // */
+    // public List<PeerInfo> rechercherFichier(String filename) {
+    // return peersConnus.stream()
+    // .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
+    // .filter(peer -> {
+    // String clePeer = peer.getAdresse() + ":" + peer.getPort();
+    // List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
+    // return fichiers != null && fichiers.stream()
+    // .anyMatch(meta -> meta.getNom().equals(filename));
+    // })
+    // .collect(Collectors.toList());
+    // }
+
+    /**
+     * Liste les noms des fichiers disponibles sur un peer distant
+     * 
+     * @param ip   Adresse IP du peer distant
+     * @param port Port du peer distant
+     * @return Liste des noms des fichiers disponibles ou liste vide en cas d'erreur
+     */
+    public List<String> listerFichiersPeerDistant(String ip, int port) {
+        List<Metadata> metadatas = listerFichiersPeerDistantAvecMetadata(ip, port);
+        if (metadatas == null) {
+            return new ArrayList<>();
+        }
+        return metadatas.stream()
+                .map(Metadata::getNom)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Méthode interne pour obtenir les métadonnées complètes
+     */
+    private List<Metadata> listerFichiersPeerDistantAvecMetadata(String ip, int port) {
+        try (Socket socket = new Socket(ip, port)) {
+            socket.setSoTimeout(SOCKET_TIMEOUT_MS);
+
+            try (OutputStream out = socket.getOutputStream();
+                    InputStream in = socket.getInputStream()) {
+
+                out.write("LIST\n".getBytes(StandardCharsets.UTF_8));
+                out.flush();
+
+                byte[] data = lireDonneesBinaires(in);
+                if (data.length > 0) {
+                    return deserialiserListeMetadata(data);
+                }
+            }
+        } catch (Exception e) {
+            logError("Erreur lors de la récupération des fichiers du peer " + ip + ":" + port, e);
+        }
+        return null;
+    }
+
+    /**
+     * Recherche un fichier sur le réseau
+     * 
+     * @param filename Nom du fichier à rechercher
+     * @return Liste des identifiants des peers possédant le fichier (format
+     *         "ip:port")
+     */
+    public List<String> rechercherFichier(String filename) {
+        return rechercherFichierAvecPeerInfo(filename).stream()
+                .map(peer -> peer.getAdresse() + ":" + peer.getPort())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Méthode existante renommée pour garder la fonctionnalité originale
+     */
+    public List<PeerInfo> rechercherFichierAvecPeerInfo(String filename) {
+        return peersConnus.stream()
+                .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
+                .filter(peer -> {
+                    String clePeer = peer.getAdresse() + ":" + peer.getPort();
+                    List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
+                    return fichiers != null && fichiers.stream()
+                            .anyMatch(meta -> meta.getNom().equals(filename));
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Télécharge un fichier depuis le réseau P2P
+     * 
+     * @param nomFichier Le nom du fichier à télécharger
+     * @return true si le téléchargement a réussi, false sinon
+     */
+    public boolean telechargerFichier(String nomFichier) {
+        // Utilisation de la nouvelle méthode qui retourne List<String>
+        List<String> peersAvecFichier = rechercherFichier(nomFichier);
+
+        if (peersAvecFichier.isEmpty()) {
+            logInfo("Fichier '" + nomFichier + "' introuvable sur le réseau");
+            return false;
+        }
+
+        logInfo("Fichier trouvé chez " + peersAvecFichier.size() + " peer(s)");
+
+        for (String peerId : peersAvecFichier) {
+            // Découper l'identifiant "ip:port"
+            String[] parts = peerId.split(":");
+            if (parts.length != 2)
+                continue;
+
+            String ip = parts[0];
+            int port;
+            try {
+                port = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+
+            logInfo("Tentative de téléchargement depuis " + peerId);
+            if (telechargerFichierDepuisPeer(nomFichier, ip, port)) {
+                return true;
+            }
+        }
+
+        logInfo("Échec du téléchargement depuis tous les peers");
+        return false;
     }
 }
