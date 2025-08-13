@@ -63,12 +63,18 @@ public class PeerSafyUI extends JFrame {
     }
 
     private void setLookAndFeel() {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
+    try {
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            if ("Nimbus".equals(info.getName())) {
+                UIManager.setLookAndFeel(info.getClassName());
+                break;
+            }
         }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
+
 
     private void initMenu() {
         JMenuBar menuBar = new JMenuBar();
@@ -90,90 +96,6 @@ public class PeerSafyUI extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    // private void initComponents() {
-    // // --- Peers connus ---
-    // peerListModel = new DefaultListModel<>();
-    // JList<String> peerList = new JList<>(peerListModel);
-    // JScrollPane peerScroll = new JScrollPane(peerList);
-    // peerScroll.setBorder(BorderFactory.createTitledBorder("Connected Peers"));
-
-    // // --- Peers distants (pour sélectionner celui dont on veut les fichiers) ---
-    // remotePeerListModel = new DefaultListModel<>();
-    // remotePeerList = new JList<>(remotePeerListModel);
-    // JScrollPane remotePeerScroll = new JScrollPane(remotePeerList);
-    // remotePeerScroll.setBorder(BorderFactory.createTitledBorder("Select Peer"));
-    // remotePeerList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-    // remotePeerList.addListSelectionListener(e -> {
-    // if (!e.getValueIsAdjusting()) {
-    // String selectedPeer = remotePeerList.getSelectedValue();
-    // if (selectedPeer != null) {
-    // String[] parts = selectedPeer.split(":");
-    // String ip = parts[0];
-    // int port = Integer.parseInt(parts[1]);
-    // updateRemoteFiles(ip, port);
-    // }
-    // }
-    // });
-
-    // // --- Files List ---
-    // fileListModel = new DefaultListModel<>();
-    // fileList = new JList<>(fileListModel);
-    // JScrollPane fileScroll = new JScrollPane(fileList);
-    // fileScroll.setBorder(BorderFactory.createTitledBorder("Files on Selected
-    // Peer"));
-
-    // // Double-clic pour télécharger un fichier
-    // fileList.addMouseListener(new MouseAdapter() {
-    // public void mouseClicked(MouseEvent e) {
-    // if (e.getClickCount() == 2) {
-    // downloadSelectedFile();
-    // }
-    // }
-    // });
-
-    // // --- Log Area ---
-    // logArea = new JTextArea();
-    // logArea.setEditable(false);
-    // JScrollPane logScroll = new JScrollPane(logArea);
-    // logScroll.setBorder(BorderFactory.createTitledBorder("Logs"));
-
-    // // --- Status Bar ---
-    // statusLabel = new JLabel("Status: Ready");
-    // statusLabel.setBorder(BorderFactory.createEtchedBorder());
-
-    // // --- Buttons ---
-    // JButton connectButton = createButton("Connect Peer", e -> connectPeer());
-    // JButton searchButton = createButton("Search File", e -> searchFile());
-    // JButton downloadButton = createButton("Download File", e ->
-    // downloadSelectedFile());
-    // JButton refreshButton = createButton("Refresh", e -> refreshPeerLists());
-
-    // JPanel buttonPanel = new JPanel(new GridLayout(4, 1, 5, 5));
-    // buttonPanel.add(connectButton);
-    // buttonPanel.add(searchButton);
-    // buttonPanel.add(downloadButton);
-    // buttonPanel.add(refreshButton);
-
-    // // --- Layout principal ---
-    // JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-    // remotePeerScroll, fileScroll);
-    // leftSplit.setDividerLocation(250);
-
-    // JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-    // peerScroll, leftSplit);
-    // centerSplit.setDividerLocation(250);
-
-    // JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-    // centerSplit, buttonPanel);
-    // mainSplit.setDividerLocation(650);
-
-    // getContentPane().setLayout(new BorderLayout());
-    // getContentPane().add(mainSplit, BorderLayout.CENTER);
-    // getContentPane().add(logScroll, BorderLayout.SOUTH);
-    // getContentPane().add(statusLabel, BorderLayout.NORTH);
-    // }
-
     private void initComponents() {
         // Création des modèles de données
         peerListModel = new DefaultListModel<>();
@@ -182,7 +104,7 @@ public class PeerSafyUI extends JFrame {
         localFileListModel = new DefaultListModel<>();
 
         // --- Panel des fichiers locaux ---
-        JList<String> localFileList = new JList<>(localFileListModel);
+        localFileList = new JList<>(localFileListModel);
         localFileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane localFileScroll = new JScrollPane(localFileList);
         localFileScroll.setBorder(BorderFactory.createTitledBorder("Mes fichiers partagés"));
@@ -252,6 +174,7 @@ public class PeerSafyUI extends JFrame {
         JButton refreshButton = createButton("Actualiser", e -> refreshAll());
         JButton addFileButton = createButton("Ajouter fichier", e -> addFileToShare());
         JButton removeFileButton = createButton("Retirer fichier", e -> removeFileFromShare());
+        JButton readFileButton = createButton("Lire fichier", e -> openLocalFile());
 
         JPanel buttonPanel = new JPanel(new GridLayout(6, 1, 5, 5));
         buttonPanel.add(connectButton);
@@ -260,6 +183,7 @@ public class PeerSafyUI extends JFrame {
         buttonPanel.add(addFileButton);
         buttonPanel.add(removeFileButton);
         buttonPanel.add(refreshButton);
+        buttonPanel.add(readFileButton);
 
         // --- Organisation du layout principal ---
         // Colonne de gauche (fichiers locaux et peers)
@@ -293,15 +217,20 @@ public class PeerSafyUI extends JFrame {
         getContentPane().add(statusLabel, BorderLayout.NORTH);
     }
 
-    private JButton createButton(String text, ActionListener action) {
-        JButton button = new JButton(text);
-        button.addActionListener(action);
-        button.setToolTipText(text + " action");
-        button.setFocusPainted(false);
-        button.setBackground(Color.LIGHT_GRAY);
-        button.setBorder(BorderFactory.createEtchedBorder());
-        return button;
-    }
+   private JButton createButton(String text, ActionListener action) {
+    JButton button = new JButton(text);
+    button.addActionListener(action);
+    button.setToolTipText(text + " action");
+    button.setFocusPainted(false);
+    button.setBackground(Color.LIGHT_GRAY);
+    button.setBorder(BorderFactory.createEtchedBorder());
+
+    // Taille visible
+    button.setPreferredSize(new Dimension(160, 35));
+
+    return button;
+}
+
 
     private void connectPeer() {
         String addr = JOptionPane.showInputDialog(this, "Peer Address:Port");
@@ -370,7 +299,9 @@ public class PeerSafyUI extends JFrame {
             int port = Integer.parseInt(parts[1]);
             if (peer.telechargerFichierDepuisPeer(filename, ip, port)) {
                 log("Download successful: " + filename + " from " + ip + ":" + port);
-                refreshPeerLists();
+                // refreshPeerLists();
+                refreshLocalFiles();
+
             } else {
                 log("Download failed: " + filename);
             }
@@ -412,20 +343,22 @@ public class PeerSafyUI extends JFrame {
         return String.format("%.1f GB", size / (1024.0 * 1024 * 1024));
     }
 
-    private void openLocalFile() {
-        String selectedFile = localFileListModel.getElementAt(localFileList.getSelectedIndex()).split(" ")[0];
-        File file = new File(peer.getDossierPartage(), selectedFile);
+    // private void openLocalFile() {
+    // String selectedFile =
+    // localFileListModel.getElementAt(localFileList.getSelectedIndex()).split("
+    // ")[0];
+    // File file = new File(peer.getDossierPartage(), selectedFile);
 
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().open(file);
-            } catch (Exception e) {
-                log("Error opening file: " + e.getMessage());
-            }
-        } else {
-            log("Desktop operations not supported");
-        }
-    }
+    // if (Desktop.isDesktopSupported()) {
+    // try {
+    // Desktop.getDesktop().open(file);
+    // } catch (Exception e) {
+    // log("Error opening file: " + e.getMessage());
+    // }
+    // } else {
+    // log("Desktop operations not supported");
+    // }
+    // }
 
     private void refreshAll() {
         refreshPeerLists();
@@ -434,31 +367,36 @@ public class PeerSafyUI extends JFrame {
     }
 
     private void removeFileFromShare() {
-        String selected = ((JList<String>) localFileList).getSelectedValue();
-        if (selected != null) {
-            String filename = selected.split(" \\(")[0];
-            int response = JOptionPane.showConfirmDialog(this,
-                    "Voulez-vous vraiment retirer '" + filename + "' du partage?",
-                    "Confirmation",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (response == JOptionPane.YES_OPTION) {
-                File file = new File(peer.getDossierPartage(), filename);
-                if (file.delete()) {
-                    log("Fichier retiré du partage: " + filename);
-                    refreshLocalFiles();
-
-                    // Notifier les peers de la suppression
-                    peer.mettreAJourCacheComplet();
-                } else {
-                    log("Échec de la suppression du fichier: " + filename);
-                }
-            }
-        } else {
+        // Récupérer le fichier sélectionné
+        String selected = localFileList.getSelectedValue();
+        if (selected == null) {
             JOptionPane.showMessageDialog(this,
                     "Sélectionnez un fichier à retirer",
                     "Information",
                     JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String filename = selected.split(" \\(")[0];
+
+        // Confirmation de la suppression
+        int response = JOptionPane.showConfirmDialog(this,
+                "Voulez-vous vraiment retirer '" + filename + "' du partage ?",
+                "Confirmation",
+                JOptionPane.YES_NO_OPTION);
+
+        if (response != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // Supprimer le fichier via la méthode du Peer
+        boolean deleted = peer.supprimerFichier(filename);
+
+        if (deleted) {
+            log("Fichier retiré du partage : " + filename);
+            refreshLocalFiles();
+        } else {
+            log("Échec de la suppression du fichier : " + filename);
         }
     }
 
@@ -483,11 +421,41 @@ public class PeerSafyUI extends JFrame {
         }
     }
 
+    private void openLocalFile() {
+        String selected = localFileList.getSelectedValue();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Sélectionnez un fichier à ouvrir",
+                    "Information",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String filename = selected.split(" \\(")[0];
+
+        try {
+            String content = peer.lireFichier(filename);
+            JTextArea textArea = new JTextArea(content);
+            textArea.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(textArea);
+            scrollPane.setPreferredSize(new Dimension(600, 400));
+
+            JOptionPane.showMessageDialog(this, scrollPane,
+                    "Contenu de " + filename, JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            log("Erreur lecture fichier : " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             PeerSafyUI ui = new PeerSafyUI();
             ui.setVisible(true);
+            ui.refreshLocalFiles();
+
         });
     }
 
 }
+
+

@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -18,7 +19,6 @@ public class Peer {
     private final File dossierPartage;
     private final FileManager fileManager;
     private final Object fileLock = new Object();
-
     // Gestion des connexions réseau
     private final List<PeerInfo> peersConnus = new CopyOnWriteArrayList<>();
     private final Map<String, List<Metadata>> cacheFichiersPeers = new ConcurrentHashMap<>();
@@ -464,45 +464,6 @@ public class Peer {
     }
 
     // ==================== MÉTHODES PUBLIQUES ====================
-
-    // /**
-    // * Recherche un fichier sur le réseau
-    // */
-    // public List<PeerInfo> rechercherFichier(String nomFichier) {
-    // return peersConnus.stream()
-    // .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
-    // .filter(peer -> {
-    // String clePeer = peer.getAdresse() + ":" + peer.getPort();
-    // List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
-    // return fichiers != null && fichiers.stream()
-    // .anyMatch(meta -> meta.getNom().equals(nomFichier));
-    // })
-    // .collect(Collectors.toList());
-    // }
-
-    /**
-     * Télécharge un fichier depuis le réseau
-     */
-    // public boolean telechargerFichier(String nomFichier) {
-    // List<PeerInfo> peersAvecFichier = rechercherFichier(nomFichier);
-
-    // if (peersAvecFichier.isEmpty()) {
-    // logInfo("Fichier '" + nomFichier + "' introuvable sur le réseau");
-    // return false;
-    // }
-
-    // logInfo("Fichier trouvé chez " + peersAvecFichier.size() + " peer(s)");
-
-    // for (PeerInfo peer : peersAvecFichier) {
-    // logInfo("Tentative de téléchargement depuis " + peer);
-    // if (telechargerDepuisPeer(peer, nomFichier)) {
-    // return true;
-    // }
-    // }
-
-    // logInfo("Échec du téléchargement depuis tous les peers");
-    // return false;
-    // }
 
     /**
      * Télécharge un fichier depuis un peer spécifique
@@ -1094,37 +1055,6 @@ public class Peer {
                 });
     }
 
-    // /**
-    // * Liste les fichiers disponibles sur un peer distant
-    // * @param ip Adresse IP du peer distant
-    // * @param port Port du peer distant
-    // * @return Liste des métadonnées des fichiers disponibles ou null en cas
-    // d'erreur
-    // */
-    // public List<Metadata> listerFichiersPeerDistant(String ip, int port) {
-    // try (Socket socket = new Socket(ip, port)) {
-    // socket.setSoTimeout(SOCKET_TIMEOUT_MS);
-
-    // try (OutputStream out = socket.getOutputStream();
-    // InputStream in = socket.getInputStream()) {
-
-    // // Envoyer commande LIST
-    // out.write("LIST\n".getBytes(StandardCharsets.UTF_8));
-    // out.flush();
-
-    // // Lire réponse binaire
-    // byte[] data = lireDonneesBinaires(in);
-    // if (data.length > 0) {
-    // return deserialiserListeMetadata(data);
-    // }
-    // }
-    // } catch (Exception e) {
-    // logError("Erreur lors de la récupération des fichiers du peer " + ip + ":" +
-    // port, e);
-    // }
-    // return null;
-    // }
-
     /**
      * Télécharge un fichier depuis un peer spécifique
      * 
@@ -1139,22 +1069,6 @@ public class Peer {
         return telechargerDepuisPeer(peer, filename);
     }
 
-    // /**
-    // * Recherche un fichier sur le réseau (méthode existante déjà implémentée)
-    // * @param filename Nom du fichier à rechercher
-    // * @return Liste des peers possédant le fichier
-    // */
-    // public List<PeerInfo> rechercherFichier(String filename) {
-    // return peersConnus.stream()
-    // .filter(peer -> peer.estActif(PEER_TIMEOUT_MS))
-    // .filter(peer -> {
-    // String clePeer = peer.getAdresse() + ":" + peer.getPort();
-    // List<Metadata> fichiers = cacheFichiersPeers.get(clePeer);
-    // return fichiers != null && fichiers.stream()
-    // .anyMatch(meta -> meta.getNom().equals(filename));
-    // })
-    // .collect(Collectors.toList());
-    // }
 
     /**
      * Liste les noms des fichiers disponibles sur un peer distant
@@ -1258,6 +1172,7 @@ public class Peer {
 
             logInfo("Tentative de téléchargement depuis " + peerId);
             if (telechargerFichierDepuisPeer(nomFichier, ip, port)) {
+                mettreAJourCacheComplet();
                 return true;
             }
         }
@@ -1265,4 +1180,46 @@ public class Peer {
         logInfo("Échec du téléchargement depuis tous les peers");
         return false;
     }
+
+     /**
+     * Supprime un fichier du dossier de partage.
+     *
+     * @param filename Nom du fichier à supprimer
+     * @return true si le fichier a été supprimé, false sinon
+     */
+    public boolean supprimerFichier(String filename) {
+        if (filename == null || filename.isEmpty()) return false;
+
+        File file = new File(dossierPartage, filename);
+        if (!file.exists() || !file.isFile()) return false;
+
+        boolean deleted = file.delete();
+        if (deleted) {
+            // Notifier les autres peers que le fichier a été supprimé
+            mettreAJourCacheComplet();
+        }
+        return deleted;
+    }
+
+     /**
+     * Lit le contenu d'un fichier du dossier de partage.
+     *
+     * @param filename Nom du fichier
+     * @return Contenu du fichier sous forme de String
+     * @throws IOException si le fichier n'existe pas ou lecture impossible
+     */
+    public String lireFichier(String filename) throws IOException {
+        if (filename == null || filename.isEmpty()) {
+            throw new IllegalArgumentException("Nom de fichier invalide");
+        }
+
+        File file = new File(dossierPartage, filename);
+        if (!file.exists() || !file.isFile()) {
+            throw new IOException("Fichier introuvable : " + filename);
+        }
+
+        return new String(Files.readAllBytes(file.toPath()));
+    }
+
+    
 }
