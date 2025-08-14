@@ -30,7 +30,7 @@ public class Peer {
     private final ScheduledExecutorService schedulerMaintenance = Executors.newScheduledThreadPool(3);
 
     // Configuration
-    private static final long PEER_TIMEOUT_MS = 30000;
+    private static final long PEER_TIMEOUT_MS = 3000;
     private static final int SOCKET_TIMEOUT_MS = 5000;
     private static final int BUFFER_SIZE = 8192;
     // private static final int MAX_RETRY_ATTEMPTS = 3;
@@ -66,7 +66,7 @@ public class Peer {
                 logInfo("Peer '" + pseudo + "' démarré sur le port " + portEcoute);
 
                 // Découverte initiale différée
-                schedulerMaintenance.schedule(this::decouvriePeers, 2, TimeUnit.SECONDS);
+                schedulerMaintenance.schedule(this::decouvriePeers, 1, TimeUnit.SECONDS);
 
             } catch (IOException e) {
                 logError("Erreur lors du démarrage du peer", e);
@@ -131,7 +131,6 @@ public class Peer {
     /**
      * Traite une requête d'un peer distant
      */
-
     private void traiterRequetePeer(Socket clientSocket) {
         try {
             clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
@@ -166,6 +165,9 @@ public class Peer {
                     case "ANNOUNCE":
                         handleAnnounce(parts, clientSocket, out);
                         break;
+                    case "UPLOAD": // NOUVEAU CAS
+                        handleUploadFile(parts, socketIn, out);
+                        break;
                     default:
                         out.println("ERREUR: commande inconnue");
                 }
@@ -175,6 +177,51 @@ public class Peer {
             logError("Erreur lors du traitement d'une requête", e);
         }
     }
+
+    // private void traiterRequetePeer(Socket clientSocket) {
+    // try {
+    // clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
+
+    // try (BufferedReader in = new BufferedReader(new
+    // InputStreamReader(clientSocket.getInputStream()));
+    // PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+    // InputStream socketIn = clientSocket.getInputStream();
+    // OutputStream socketOut = clientSocket.getOutputStream()) {
+
+    // String commande = in.readLine();
+    // if (commande == null)
+    // return;
+
+    // logDebug("Requête reçue: " + commande);
+
+    // String[] parts = commande.split(" ", 4);
+    // String cmd = parts[0].toUpperCase();
+
+    // switch (cmd) {
+    // case "PING":
+    // handlePing(out);
+    // break;
+    // case "LIST":
+    // handleListFiles(socketOut);
+    // break;
+    // case "GET":
+    // handleGetFile(parts, socketOut, out);
+    // break;
+    // case "PEERS":
+    // handleGetPeers(socketOut);
+    // break;
+    // case "ANNOUNCE":
+    // handleAnnounce(parts, clientSocket, out);
+    // break;
+    // default:
+    // out.println("ERREUR: commande inconnue");
+    // }
+    // }
+
+    // } catch (Exception e) {
+    // logError("Erreur lors du traitement d'une requête", e);
+    // }
+    // }
 
     // Handlers pour les différentes commandes
     private void handlePing(PrintWriter out) {
@@ -1069,7 +1116,6 @@ public class Peer {
         return telechargerDepuisPeer(peer, filename);
     }
 
-
     /**
      * Liste les noms des fichiers disponibles sur un peer distant
      * 
@@ -1181,17 +1227,19 @@ public class Peer {
         return false;
     }
 
-     /**
+    /**
      * Supprime un fichier du dossier de partage.
      *
      * @param filename Nom du fichier à supprimer
      * @return true si le fichier a été supprimé, false sinon
      */
     public boolean supprimerFichier(String filename) {
-        if (filename == null || filename.isEmpty()) return false;
+        if (filename == null || filename.isEmpty())
+            return false;
 
         File file = new File(dossierPartage, filename);
-        if (!file.exists() || !file.isFile()) return false;
+        if (!file.exists() || !file.isFile())
+            return false;
 
         boolean deleted = file.delete();
         if (deleted) {
@@ -1201,7 +1249,7 @@ public class Peer {
         return deleted;
     }
 
-     /**
+    /**
      * Lit le contenu d'un fichier du dossier de partage.
      *
      * @param filename Nom du fichier
@@ -1221,5 +1269,156 @@ public class Peer {
         return new String(Files.readAllBytes(file.toPath()));
     }
 
-    
+    /**
+     * Upload un fichier vers un peer distant
+     * 
+     * @param filename   Nom du fichier local à envoyer
+     * @param targetIp   Adresse IP du peer destinataire
+     * @param targetPort Port du peer destinataire
+     * @return true si l'upload a réussi, false sinon
+     */
+    public boolean uploaderFichierVersPeer(String filename, String targetIp, int targetPort) {
+        File fichierLocal = new File(dossierPartage, filename);
+
+        if (!fichierLocal.exists() || !fichierLocal.isFile()) {
+            logError("Fichier local introuvable: " + filename);
+            return false;
+        }
+
+        try (Socket socket = new Socket(targetIp, targetPort)) {
+            socket.setSoTimeout(30000);
+
+            try (InputStream fileIn = new FileInputStream(fichierLocal);
+                    OutputStream socketOut = socket.getOutputStream();
+                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+                // Calculer le checksum du fichier
+                String checksum = fileManager.calculerChecksum(fichierLocal);
+                long taille = fichierLocal.length();
+
+                // Envoyer la commande UPLOAD avec les métadonnées
+                out.println("UPLOAD " + filename + " " + taille + " " + checksum);
+
+                // Lire la réponse du serveur
+                String reponse = in.readLine();
+                if (reponse == null || !reponse.startsWith("READY")) {
+                    logError("Peer distant pas prêt à recevoir: " + reponse);
+                    return false;
+                }
+
+                // Envoyer le fichier
+                logInfo("Début de l'upload de " + filename + " vers " + targetIp + ":" + targetPort);
+                copierAvecProgressionUpload(fileIn, socketOut, taille, filename);
+
+                // Attendre confirmation
+                String confirmation = in.readLine();
+                if ("SUCCESS".equals(confirmation)) {
+                    logInfo("Upload réussi: " + filename);
+                    return true;
+                } else {
+                    logError("Échec de l'upload: " + confirmation);
+                    return false;
+                }
+
+            }
+        } catch (Exception e) {
+            logError("Erreur lors de l'upload vers " + targetIp + ":" + targetPort, e);
+            return false;
+        }
+    }
+
+    /**
+     * Copie un fichier avec affichage de progression pour l'upload
+     */
+    private void copierAvecProgressionUpload(InputStream source, OutputStream destination,
+            long taille, String nomFichier) throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        long totalEnvoye = 0;
+        int lu;
+
+        while (totalEnvoye < taille && (lu = source.read(buffer, 0,
+                (int) Math.min(buffer.length, taille - totalEnvoye))) != -1) {
+            destination.write(buffer, 0, lu);
+            destination.flush();
+            totalEnvoye += lu;
+
+            // Afficher progression pour gros fichiers
+            if (taille > 1024 * 1024 && totalEnvoye % (1024 * 1024) == 0) {
+                int progression = (int) ((totalEnvoye * 100) / taille);
+                System.out.print("\rUpload " + nomFichier + ": " + progression + "%");
+            }
+        }
+
+        if (taille > 1024 * 1024) {
+            System.out.println(); // Nouvelle ligne après progression
+        }
+    }
+
+    /**
+     * Gère la réception d'un fichier uploadé par un peer distant
+     */
+    private void handleUploadFile(String[] parts, InputStream socketIn, PrintWriter out) {
+        if (parts.length < 4) {
+            out.println("ERREUR: commande UPLOAD invalide (format: UPLOAD filename size checksum)");
+            return;
+        }
+
+        String nomFichier = parts[1];
+        long tailleFichier;
+        String checksumAttendu = parts[3];
+
+        try {
+            tailleFichier = Long.parseLong(parts[2]);
+            if (tailleFichier < 0 || tailleFichier > 1_000_000_000L) { // Max 1GB
+                out.println("ERREUR: taille de fichier invalide");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            out.println("ERREUR: taille de fichier invalide");
+            return;
+        }
+
+        // Vérifier si le fichier existe déjà
+        File fichierDestination = new File(dossierPartage, nomFichier);
+        if (fichierDestination.exists()) {
+            // Générer un nom unique
+            String nomUnique = genererNomUnique(fichierDestination);
+            fichierDestination = new File(dossierPartage, nomUnique);
+            logInfo("Fichier existant, sauvegarde sous: " + nomUnique);
+        }
+
+        synchronized (fileLock) {
+            try {
+                out.println("READY");
+                out.flush();
+
+                // Recevoir le fichier
+                try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fichierDestination))) {
+                    copierAvecProgression(socketIn, bos, tailleFichier, nomFichier);
+                }
+
+                // Vérifier l'intégrité
+                if (verifierIntegriteFichier(fichierDestination, checksumAttendu)) {
+                    out.println("SUCCESS");
+                    logInfo("Fichier reçu avec succès: " + fichierDestination.getName());
+
+                    // Mettre à jour le cache
+                    schedulerMaintenance.execute(this::mettreAJourCacheComplet);
+                } else {
+                    out.println("ERREUR: checksum invalide");
+                    fichierDestination.delete();
+                    logError("Checksum invalide pour le fichier reçu: " + nomFichier);
+                }
+
+            } catch (Exception e) {
+                out.println("ERREUR: " + e.getMessage());
+                if (fichierDestination.exists()) {
+                    fichierDestination.delete();
+                }
+                logError("Erreur lors de la réception du fichier " + nomFichier, e);
+            }
+        }
+    }
+
 }

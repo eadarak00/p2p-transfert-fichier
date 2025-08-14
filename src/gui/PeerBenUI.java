@@ -33,7 +33,7 @@ public class PeerBenUI extends JFrame {
     private static final Font LIST_FONT = new Font("Poppins", Font.PLAIN, 24);
     private static final Font STATUS_FONT = new Font("Poppins", Font.ITALIC, 26);
     private static final Font LOG_FONT = new Font("Consolas", Font.PLAIN, 22);
-    
+
     private static final Color PRIMARY_COLOR = new Color(70, 130, 180);
     private static final Color SECONDARY_COLOR = new Color(100, 149, 237);
     private static final Color ACCENT_COLOR = new Color(255, 140, 0);
@@ -113,16 +113,16 @@ public class PeerBenUI extends JFrame {
             // Personnaliser les polices pour la confirmation de sortie
             UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.BOLD, 26));
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-            
+
             String message = "<html><div style='text-align: center; padding: 30px;'>" +
-                            "<h3 style='color: #FF8C00;'> Confirmation de sortie</h3>" +
-                            "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous vraiment quitter<br/>" +
-                            "<b style='color: #4682B4;'>PeerBen</b> ?</p>" +
-                            "<p style='font-size: 16px; color: #666;'>Toutes les connexions actives seront fermées</p>" +
-                            "</div></html>";
-                            
+                    "<h3 style='color: #FF8C00;'> Confirmation de sortie</h3>" +
+                    "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous vraiment quitter<br/>" +
+                    "<b style='color: #4682B4;'>PeerBen</b> ?</p>" +
+                    "<p style='font-size: 16px; color: #666;'>Toutes les connexions actives seront fermées</p>" +
+                    "</div></html>";
+
             int option = JOptionPane.showConfirmDialog(this, message,
-                "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (option == JOptionPane.YES_OPTION) {
                 System.exit(0);
             }
@@ -135,20 +135,21 @@ public class PeerBenUI extends JFrame {
             // Personnaliser les polices pour le dialog "À propos"
             UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 24));
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-            
+
             String message = "<html><div style='text-align: center; padding: 40px;'>" +
-                "<h1 style='color: #4682B4; font-size: 32px; margin-bottom: 20px;'>PeerBen P2P Application</h1>" +
-                "<table style='margin: 0 auto; font-size: 20px; line-height: 2.0;'>" +
-                "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Version:</td>" +
-                "<td style='padding: 5px 15px;'>2.0 Enhanced</td></tr>" +
-                "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Auteur:</td>" +
-                "<td style='padding: 5px 15px;'>Ben</td></tr>" +
-                "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Description:</td>" +
-                "<td style='padding: 5px 15px;'>Interface moderne pour le partage P2P</td></tr>" +
-                "</table>" +
-                "<p style='color: #FF8C00; font-size: 22px; font-style: italic; margin-top: 30px;'>Conçu avec passion</p>" +
-                "</div></html>";
-                
+                    "<h1 style='color: #4682B4; font-size: 32px; margin-bottom: 20px;'>PeerBen P2P Application</h1>" +
+                    "<table style='margin: 0 auto; font-size: 20px; line-height: 2.0;'>" +
+                    "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Version:</td>" +
+                    "<td style='padding: 5px 15px;'>2.0 Enhanced</td></tr>" +
+                    "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Auteur:</td>" +
+                    "<td style='padding: 5px 15px;'>Ben</td></tr>" +
+                    "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Description:</td>" +
+                    "<td style='padding: 5px 15px;'>Interface moderne pour le partage P2P</td></tr>" +
+                    "</table>" +
+                    "<p style='color: #FF8C00; font-size: 22px; font-style: italic; margin-top: 30px;'>Conçu avec passion</p>"
+                    +
+                    "</div></html>";
+
             JOptionPane.showMessageDialog(this, message, "À propos de PeerBen", JOptionPane.INFORMATION_MESSAGE);
         });
         helpMenu.add(aboutItem);
@@ -238,9 +239,8 @@ public class PeerBenUI extends JFrame {
         statusLabel.setFont(STATUS_FONT);
         statusLabel.setForeground(PRIMARY_COLOR);
         statusLabel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(3, 0, 0, 0, ACCENT_COLOR),
-            BorderFactory.createEmptyBorder(15, 20, 15, 20)
-        ));
+                BorderFactory.createMatteBorder(3, 0, 0, 0, ACCENT_COLOR),
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)));
         statusLabel.setOpaque(true);
         statusLabel.setBackground(BACKGROUND_COLOR);
 
@@ -293,31 +293,61 @@ public class PeerBenUI extends JFrame {
 
     private JScrollPane createStyledScrollPane(JComponent component, String title) {
         JScrollPane scrollPane = new JScrollPane(component);
-        
+
         // Bordure personnalisée avec titre
         Border titleBorder = BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(PRIMARY_COLOR, 2, true),
-            title,
-            0, 0, TITLE_FONT, PRIMARY_COLOR
-        );
-        
+                BorderFactory.createLineBorder(PRIMARY_COLOR, 2, true),
+                title,
+                0, 0, TITLE_FONT, PRIMARY_COLOR);
+
         Border paddingBorder = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(paddingBorder, titleBorder));
-        
+
         // Style de la scrollbar
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(16, 0));
         scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 16));
-        
+
         return scrollPane;
     }
+
+    // private JPanel createButtonPanel() {
+    // JPanel buttonPanel = new JPanel(new GridBagLayout());
+    // buttonPanel.setBackground(BACKGROUND_COLOR);
+    // buttonPanel.setBorder(BorderFactory.createCompoundBorder(
+    // BorderFactory.createMatteBorder(0, 3, 0, 0, ACCENT_COLOR),
+    // BorderFactory.createEmptyBorder(20, 20, 20, 20)
+    // ));
+
+    // GridBagConstraints gbc = new GridBagConstraints();
+    // gbc.fill = GridBagConstraints.HORIZONTAL;
+    // gbc.insets = new Insets(10, 0, 10, 0);
+    // gbc.weightx = 1.0;
+
+    // String[] buttonData = {
+    // "Connecter Peer", "connectPeer",
+    // "Rechercher", "searchFile",
+    // "Télécharger", "downloadSelectedFile",
+    // "Ajouter Fichier", "addFileToShare",
+    // "Retirer Fichier", "removeFileFromShare",
+    // "Lire Fichier", "openLocalFile",
+    // "Actualiser", "refreshAll"
+    // };
+
+    // for (int i = 0; i < buttonData.length; i += 2) {
+    // gbc.gridy = i / 2;
+    // JButton button = createStyledButton(buttonData[i], buttonData[i + 1]);
+    // buttonPanel.add(button, gbc);
+    // }
+
+    // return buttonPanel;
+    // }
 
     private JPanel createButtonPanel() {
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setBackground(BACKGROUND_COLOR);
         buttonPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 3, 0, 0, ACCENT_COLOR),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+                BorderFactory.createMatteBorder(0, 3, 0, 0, ACCENT_COLOR),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -325,13 +355,14 @@ public class PeerBenUI extends JFrame {
         gbc.weightx = 1.0;
 
         String[] buttonData = {
-            "Connecter Peer", "connectPeer",
-            "Rechercher", "searchFile", 
-            "Télécharger", "downloadSelectedFile",
-            "Ajouter Fichier", "addFileToShare",
-            "Retirer Fichier", "removeFileFromShare", 
-            "Lire Fichier", "openLocalFile",
-            "Actualiser", "refreshAll"
+                "Connecter Peer", "connectPeer",
+                "Rechercher", "searchFile",
+                "Télécharger", "downloadSelectedFile",
+                "Uploader Fichier", "uploadFileToSelectedPeer", // NOUVEAU BOUTON
+                "Ajouter Fichier", "addFileToShare",
+                "Retirer Fichier", "removeFileFromShare",
+                "Lire Fichier", "openLocalFile",
+                "Actualiser", "refreshAll"
         };
 
         for (int i = 0; i < buttonData.length; i += 2) {
@@ -348,18 +379,17 @@ public class PeerBenUI extends JFrame {
         button.setFont(BUTTON_FONT);
         button.setPreferredSize(new Dimension(220, 50));
         button.setMinimumSize(new Dimension(220, 50));
-        
+
         // Gradient background
         button.setBackground(PRIMARY_COLOR);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-        
+
         // Bordure arrondie
         button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+                BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
 
         // Effets hover
         button.addMouseListener(new MouseAdapter() {
@@ -378,13 +408,29 @@ public class PeerBenUI extends JFrame {
 
         // Action listeners
         switch (action) {
-            case "connectPeer": button.addActionListener(e -> connectPeer()); break;
-            case "searchFile": button.addActionListener(e -> searchFile()); break;
-            case "downloadSelectedFile": button.addActionListener(e -> downloadSelectedFile()); break;
-            case "addFileToShare": button.addActionListener(e -> addFileToShare()); break;
-            case "removeFileFromShare": button.addActionListener(e -> removeFileFromShare()); break;
-            case "openLocalFile": button.addActionListener(e -> openLocalFile()); break;
-            case "refreshAll": button.addActionListener(e -> refreshAll()); break;
+            case "connectPeer":
+                button.addActionListener(e -> connectPeer());
+                break;
+            case "searchFile":
+                button.addActionListener(e -> searchFile());
+                break;
+            case "downloadSelectedFile":
+                button.addActionListener(e -> downloadSelectedFile());
+                break;
+            case "uploadFileToSelectedPeer": button.addActionListener(e -> uploadFileToSelectedPeer()); break;  // NOUVEAU
+
+            case "addFileToShare":
+                button.addActionListener(e -> addFileToShare());
+                break;
+            case "removeFileFromShare":
+                button.addActionListener(e -> removeFileFromShare());
+                break;
+            case "openLocalFile":
+                button.addActionListener(e -> openLocalFile());
+                break;
+            case "refreshAll":
+                button.addActionListener(e -> refreshAll());
+                break;
         }
 
         return button;
@@ -393,27 +439,26 @@ public class PeerBenUI extends JFrame {
     private void connectPeer() {
         JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
+
         JLabel label = new JLabel("Adresse IP:Port du peer à connecter:", JLabel.LEFT);
         label.setFont(new Font("Poppins", Font.BOLD, 26));
         label.setForeground(PRIMARY_COLOR);
         panel.add(label);
-        
+
         JTextField textField = new JTextField("127.0.0.1:8002");
         textField.setFont(new Font("Poppins", Font.PLAIN, 24));
         textField.setPreferredSize(new Dimension(300, 45));
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
+                BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
         panel.add(textField);
 
         // Personnaliser les boutons du dialog
         UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
         UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 26));
-        
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Connexion à un Peer", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Connexion à un Peer", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             String addr = textField.getText();
@@ -436,27 +481,26 @@ public class PeerBenUI extends JFrame {
         // Personnaliser les polices pour le dialog
         UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.BOLD, 26));
         UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-        
+
         JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
+
         JLabel label = new JLabel("Nom du fichier à rechercher:", JLabel.LEFT);
         label.setFont(new Font("Poppins", Font.BOLD, 26));
         label.setForeground(PRIMARY_COLOR);
         panel.add(label);
-        
+
         JTextField textField = new JTextField();
         textField.setFont(new Font("Poppins", Font.PLAIN, 24));
         textField.setPreferredSize(new Dimension(400, 45));
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
+                BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
         panel.add(textField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, 
-            "Recherche de Fichier", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        
+        int result = JOptionPane.showConfirmDialog(this, panel,
+                "Recherche de Fichier", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
         if (result == JOptionPane.OK_OPTION) {
             String filename = textField.getText();
             if (filename != null && !filename.isEmpty()) {
@@ -500,13 +544,13 @@ public class PeerBenUI extends JFrame {
     private void downloadSelectedFile() {
         String selectedFile = fileList.getSelectedValue();
         String selectedPeer = remotePeerList.getSelectedValue();
-        
+
         if (selectedFile != null && selectedPeer != null) {
             String filename = selectedFile.replace("", "").split(" \\(")[0];
             String[] parts = selectedPeer.split(":");
             String ip = parts[0];
             int port = Integer.parseInt(parts[1]);
-            
+
             if (peer.telechargerFichierDepuisPeer(filename, ip, port)) {
                 log("Téléchargement réussi: " + filename + " depuis " + ip + ":" + port);
                 refreshLocalFiles();
@@ -517,13 +561,14 @@ public class PeerBenUI extends JFrame {
             // Personnaliser les polices pour le message d'avertissement
             UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 26));
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-            
+
             JOptionPane.showMessageDialog(this,
-                "<html><div style='text-align: center; padding: 20px;'>" +
-                "<h3 style='color: #FF8C00;'>⚠️ Attention</h3>" +
-                "<p style='font-size: 24px; margin-top: 15px;'>Sélectionnez un peer et un fichier à télécharger</p>" +
-                "</div></html>",
-                "Sélection requise", JOptionPane.WARNING_MESSAGE);
+                    "<html><div style='text-align: center; padding: 20px;'>" +
+                            "<h3 style='color: #FF8C00;'>⚠️ Attention</h3>" +
+                            "<p style='font-size: 24px; margin-top: 15px;'>Sélectionnez un peer et un fichier à télécharger</p>"
+                            +
+                            "</div></html>",
+                    "Sélection requise", JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -552,9 +597,12 @@ public class PeerBenUI extends JFrame {
     }
 
     private String formatFileSize(long size) {
-        if (size < 1024) return size + " B";
-        if (size < 1024 * 1024) return String.format("%.1f KB", size / 1024.0);
-        if (size < 1024 * 1024 * 1024) return String.format("%.1f MB", size / (1024.0 * 1024));
+        if (size < 1024)
+            return size + " B";
+        if (size < 1024 * 1024)
+            return String.format("%.1f KB", size / 1024.0);
+        if (size < 1024 * 1024 * 1024)
+            return String.format("%.1f MB", size / (1024.0 * 1024));
         return String.format("%.1f GB", size / (1024.0 * 1024 * 1024));
     }
 
@@ -570,13 +618,14 @@ public class PeerBenUI extends JFrame {
             // Personnaliser les polices pour le message d'information
             UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 26));
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-            
+
             JOptionPane.showMessageDialog(this,
-                "<html><div style='text-align: center; padding: 20px;'>" +
-                "<h3 style='color: #4682B4;'>⚠️ Information</h3>" +
-                "<p style='font-size: 24px; margin-top: 15px;'>Veuillez sélectionner un fichier à retirer du partage</p>" +
-                "</div></html>",
-                "Information", JOptionPane.INFORMATION_MESSAGE);
+                    "<html><div style='text-align: center; padding: 20px;'>" +
+                            "<h3 style='color: #4682B4;'>⚠️ Information</h3>" +
+                            "<p style='font-size: 24px; margin-top: 15px;'>Veuillez sélectionner un fichier à retirer du partage</p>"
+                            +
+                            "</div></html>",
+                    "Information", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -585,15 +634,15 @@ public class PeerBenUI extends JFrame {
         // Personnaliser les polices pour la confirmation
         UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.BOLD, 26));
         UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-        
+
         String message = "<html><div style='text-align: center; padding: 20px;'>" +
-                        "<h3 style='color: #FF8C00;'>Confirmation de suppression</h3>" +
-                        "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous vraiment retirer<br/>" +
-                        "<b style='color: #4682B4;'>" + filename + "</b><br/>" +
-                        "du partage ?</p></div></html>";
+                "<h3 style='color: #FF8C00;'>Confirmation de suppression</h3>" +
+                "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous vraiment retirer<br/>" +
+                "<b style='color: #4682B4;'>" + filename + "</b><br/>" +
+                "du partage ?</p></div></html>";
 
         int response = JOptionPane.showConfirmDialog(this, message,
-                "Confirmation de suppression", JOptionPane.YES_NO_OPTION, 
+                "Confirmation de suppression", JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
         if (response == JOptionPane.YES_OPTION) {
@@ -610,7 +659,7 @@ public class PeerBenUI extends JFrame {
     private void addFileToShare() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Sélectionner un fichier à partager");
-        
+
         // Personnaliser la police du FileChooser
         setFileChooserFont(fileChooser.getComponents());
 
@@ -628,7 +677,7 @@ public class PeerBenUI extends JFrame {
             }
         }
     }
-    
+
     // Méthode utilitaire pour personnaliser les polices du FileChooser
     private void setFileChooserFont(Component[] components) {
         Font fileChooserFont = new Font("Poppins", Font.PLAIN, 20);
@@ -650,13 +699,14 @@ public class PeerBenUI extends JFrame {
             // Personnaliser les polices pour le message d'information
             UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 26));
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
-            
+
             JOptionPane.showMessageDialog(this,
-                "<html><div style='text-align: center; padding: 20px;'>" +
-                "<h3 style='color: #4682B4;'>Information</h3>" +
-                "<p style='font-size: 24px; margin-top: 15px;'>Veuillez sélectionner un fichier à ouvrir</p>" +
-                "</div></html>",
-                "Information", JOptionPane.INFORMATION_MESSAGE);
+                    "<html><div style='text-align: center; padding: 20px;'>" +
+                            "<h3 style='color: #4682B4;'>Information</h3>" +
+                            "<p style='font-size: 24px; margin-top: 15px;'>Veuillez sélectionner un fichier à ouvrir</p>"
+                            +
+                            "</div></html>",
+                    "Information", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -664,17 +714,16 @@ public class PeerBenUI extends JFrame {
 
         try {
             String content = peer.lireFichier(filename);
-            
+
             JTextArea textArea = new JTextArea(content);
             textArea.setEditable(false);
             textArea.setFont(new Font("Consolas", Font.PLAIN, 22));
             textArea.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-            ));
+                    BorderFactory.createLineBorder(SECONDARY_COLOR, 2, true),
+                    BorderFactory.createEmptyBorder(20, 20, 20, 20)));
             textArea.setBackground(new Color(248, 249, 250));
             textArea.setForeground(TEXT_COLOR);
-            
+
             JScrollPane scrollPane = new JScrollPane(textArea);
             scrollPane.setPreferredSize(new Dimension(900, 700));
             scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -684,17 +733,89 @@ public class PeerBenUI extends JFrame {
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
 
             JOptionPane.showMessageDialog(this, scrollPane,
-                "Contenu de " + filename, JOptionPane.INFORMATION_MESSAGE);
+                    "Contenu de " + filename, JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
             log("Erreur lecture fichier: " + e.getMessage());
         }
     }
 
+    private void uploadFileToSelectedPeer() {
+    String selectedFile = localFileList.getSelectedValue();
+    String selectedPeer = remotePeerList.getSelectedValue();
+    
+    if (selectedFile == null || selectedPeer == null) {
+        UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.PLAIN, 26));
+        UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
+        
+        JOptionPane.showMessageDialog(this,
+            "<html><div style='text-align: center; padding: 20px;'>" +
+            "<h3 style='color: #FF8C00;'>⚠️ Attention</h3>" +
+            "<p style='font-size: 24px; margin-top: 15px;'>Sélectionnez un fichier local et un peer de destination</p>" +
+            "</div></html>",
+            "Sélection requise", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+    // Extraire le nom du fichier (sans la taille)
+    String filename = selectedFile.replace("📄", "").split(" \\(")[0].trim();
+    
+    // Extraire IP et port du peer sélectionné
+    String[] parts = selectedPeer.split(":");
+    String ip = parts[0];
+    int port = Integer.parseInt(parts[1]);
+    
+    // Confirmation avant upload
+    UIManager.put("OptionPane.messageFont", new Font("Poppins", Font.BOLD, 26));
+    UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
+    
+    String message = "<html><div style='text-align: center; padding: 20px;'>" +
+                    "<h3 style='color: #4682B4;'>Confirmation d'upload</h3>" +
+                    "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous uploader<br/>" +
+                    "<b style='color: #FF8C00;'>" + filename + "</b><br/>" +
+                    "vers le peer<br/>" +
+                    "<b style='color: #4682B4;'>" + selectedPeer + "</b> ?</p></div></html>";
+
+    int response = JOptionPane.showConfirmDialog(this, message,
+            "Confirmation d'upload", JOptionPane.YES_NO_OPTION, 
+            JOptionPane.QUESTION_MESSAGE);
+
+    if (response == JOptionPane.YES_OPTION) {
+        // Exécuter l'upload dans un thread séparé pour ne pas bloquer l'interface
+        SwingUtilities.invokeLater(() -> statusLabel.setText("🔄 Upload en cours..."));
+        
+        new Thread(() -> {
+            boolean success = peer.uploaderFichierVersPeer(filename, ip, port);
+            
+            SwingUtilities.invokeLater(() -> {
+                if (success) {
+                    log("Upload réussi: " + filename + " vers " + ip + ":" + port);
+                    statusLabel.setText("✅ Upload terminé avec succès");
+                } else {
+                    log("Échec de l'upload: " + filename);
+                    statusLabel.setText("❌ Échec de l'upload");
+                }
+                
+                // Actualiser les listes après un délai
+                Timer timer = new Timer(true);
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        SwingUtilities.invokeLater(() -> {
+                            updateRemoteFiles(ip, port);
+                            statusLabel.setText("🟢 Statut: Prêt");
+                        });
+                    }
+                }, 2000);
+            });
+        }).start();
+    }
+}
+
     public static void main(String[] args) {
         // Configuration pour de meilleures performances graphiques
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
-        
+
         SwingUtilities.invokeLater(() -> {
             try {
                 PeerBenUI ui = new PeerBenUI();
