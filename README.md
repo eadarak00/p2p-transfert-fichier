@@ -10,7 +10,7 @@ Chaque machine (appelée *peer*) peut :
 - Uploader ses propres fichiers vers d’autres peers.
 
 
-## 🛠 Fonctionnalités principales
+##  Fonctionnalités principales
 
 - **Découverte automatique des peers** sur le réseau.
 - **Partage de fichiers** à partir d’un dossier local.
@@ -20,6 +20,7 @@ Chaque machine (appelée *peer*) peut :
 
 ## Architecture
 
+```
 src/
 ├── clients/           # Classes des peers spécifiques
 ├── entities/          # Entités et modèles (Peer, PeerInfo, etc.)
@@ -27,15 +28,15 @@ src/
 uploads/
 ├── public/            # Fichiers reçus depuis d'autres peers
 ├── <NomPeer>/         # Dossier local des fichiers partagés par le peer
-
+```
 
 
 ## Installation
 
 1. **Cloner le projet**
    ```bash
-   git clone https://github.com/votre-repo/p2p-file-share.git
-   cd p2p-file-share
+   git clone https://github.com/eadarak00/p2p-transfert-fichier.git
+   cd p2p-transfert-fichier
    ```
 
 
