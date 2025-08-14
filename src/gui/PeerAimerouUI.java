@@ -1,7 +1,7 @@
 package gui;
 
 import javax.swing.*;
-import clients.PeerSafy;
+import clients.PeerAimerou;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -14,9 +14,9 @@ import java.util.List;
 import javax.swing.border.Border;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
-public class PeerSafyUI extends JFrame {
+public class PeerAimerouUI extends JFrame {
 
-    private PeerSafy peer;
+    private PeerAimerou peer;
     private JTextArea logArea;
     private DefaultListModel<String> peerListModel;
     private DefaultListModel<String> remotePeerListModel;
@@ -40,15 +40,15 @@ public class PeerSafyUI extends JFrame {
     private static final Color BACKGROUND_COLOR = new Color(248, 249, 250);
     private static final Color TEXT_COLOR = new Color(33, 37, 41);
 
-    public PeerSafyUI() {
-        setTitle("PeerSafy - Partage P2P Avancé");
+    public PeerAimerouUI() {
+        setTitle("PeerAimerou - Partage P2P Avancé");
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLookAndFeel();
         customizeUIDefaults();
 
-        peer = new PeerSafy();
+        peer = new PeerAimerou();
 
         initMenu();
         initComponents();
@@ -57,7 +57,7 @@ public class PeerSafyUI extends JFrame {
         new Thread(() -> {
             try {
                 peer.demarrer();
-                log("Peer Safy démarré avec succès sur le port 8001");
+                log("Peer Aimerou démarré avec succès sur le port 8003");
                 refreshPeerLists();
             } catch (Exception e) {
                 log("Erreur démarrage peer: " + e.getMessage());
@@ -117,7 +117,7 @@ public class PeerSafyUI extends JFrame {
             String message = "<html><div style='text-align: center; padding: 30px;'>" +
                             "<h3 style='color: #FF8C00;'> Confirmation de sortie</h3>" +
                             "<p style='font-size: 20px; margin: 20px 0;'>Voulez-vous vraiment quitter<br/>" +
-                            "<b style='color: #4682B4;'>PeerSafy</b> ?</p>" +
+                            "<b style='color: #4682B4;'>PeerAimerou</b> ?</p>" +
                             "<p style='font-size: 16px; color: #666;'>Toutes les connexions actives seront fermées</p>" +
                             "</div></html>";
                             
@@ -137,19 +137,19 @@ public class PeerSafyUI extends JFrame {
             UIManager.put("OptionPane.buttonFont", new Font("Poppins", Font.BOLD, 24));
             
             String message = "<html><div style='text-align: center; padding: 40px;'>" +
-                "<h1 style='color: #4682B4; font-size: 32px; margin-bottom: 20px;'>PeerSafy P2P Application</h1>" +
+                "<h1 style='color: #4682B4; font-size: 32px; margin-bottom: 20px;'>PeerAimerou P2P Application</h1>" +
                 "<table style='margin: 0 auto; font-size: 20px; line-height: 2.0;'>" +
                 "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Version:</td>" +
                 "<td style='padding: 5px 15px;'>2.0 Enhanced</td></tr>" +
                 "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Auteur:</td>" +
-                "<td style='padding: 5px 15px;'>Safy</td></tr>" +
+                "<td style='padding: 5px 15px;'>Aimerou</td></tr>" +
                 "<tr><td style='font-weight: bold; color: #4682B4; padding: 5px 15px;'>Description:</td>" +
                 "<td style='padding: 5px 15px;'>Interface moderne pour le partage P2P</td></tr>" +
                 "</table>" +
                 "<p style='color: #FF8C00; font-size: 22px; font-style: italic; margin-top: 30px;'>Conçu avec passion</p>" +
                 "</div></html>";
                 
-            JOptionPane.showMessageDialog(this, message, "À propos de PeerSafy", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, message, "À propos de PeerAimerou", JOptionPane.INFORMATION_MESSAGE);
         });
         helpMenu.add(aboutItem);
 
@@ -697,10 +697,10 @@ public class PeerSafyUI extends JFrame {
         
         SwingUtilities.invokeLater(() -> {
             try {
-                PeerSafyUI ui = new PeerSafyUI();
+                PeerAimerouUI ui = new PeerAimerouUI();
                 ui.setVisible(true);
                 ui.refreshLocalFiles();
-                ui.log("Interface PeerSafy chargée avec succès!");
+                ui.log("Interface PeerAimerou chargée avec succès!");
             } catch (Exception e) {
                 e.printStackTrace();
             }
