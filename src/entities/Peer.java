@@ -97,17 +97,17 @@ public class Peer {
      * Programme les tâches de maintenance périodiques
      */
     private void programmerTachesMaintenance() {
-        // Synchronisation des peers (toutes les 15 secondes)
+        // Synchronisation des peers (toutes les 10 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-                this::synchroniserPeersSilencieux, 15, 15, TimeUnit.SECONDS);
+                this::synchroniserPeersSilencieux, 10, 10, TimeUnit.SECONDS);
 
-        // Nettoyage des peers inactifs (toutes les 45 secondes)
+        // Nettoyage des peers inactifs (toutes les 15 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-                this::nettoyerPeersInactifs, 45, 45, TimeUnit.SECONDS);
+                this::nettoyerPeersInactifs, 15, 15, TimeUnit.SECONDS);
 
-        // Mise à jour du cache des fichiers (toutes les 30 secondes)
+        // Mise à jour du cache des fichiers (toutes les 10 secondes)
         schedulerMaintenance.scheduleAtFixedRate(
-                this::mettreAJourCacheComplet, 30, 30, TimeUnit.SECONDS);
+                this::mettreAJourCacheComplet, 10, 10, TimeUnit.SECONDS);
     }
 
     /**
@@ -177,51 +177,6 @@ public class Peer {
             logError("Erreur lors du traitement d'une requête", e);
         }
     }
-
-    // private void traiterRequetePeer(Socket clientSocket) {
-    // try {
-    // clientSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
-
-    // try (BufferedReader in = new BufferedReader(new
-    // InputStreamReader(clientSocket.getInputStream()));
-    // PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-    // InputStream socketIn = clientSocket.getInputStream();
-    // OutputStream socketOut = clientSocket.getOutputStream()) {
-
-    // String commande = in.readLine();
-    // if (commande == null)
-    // return;
-
-    // logDebug("Requête reçue: " + commande);
-
-    // String[] parts = commande.split(" ", 4);
-    // String cmd = parts[0].toUpperCase();
-
-    // switch (cmd) {
-    // case "PING":
-    // handlePing(out);
-    // break;
-    // case "LIST":
-    // handleListFiles(socketOut);
-    // break;
-    // case "GET":
-    // handleGetFile(parts, socketOut, out);
-    // break;
-    // case "PEERS":
-    // handleGetPeers(socketOut);
-    // break;
-    // case "ANNOUNCE":
-    // handleAnnounce(parts, clientSocket, out);
-    // break;
-    // default:
-    // out.println("ERREUR: commande inconnue");
-    // }
-    // }
-
-    // } catch (Exception e) {
-    // logError("Erreur lors du traitement d'une requête", e);
-    // }
-    // }
 
     // Handlers pour les différentes commandes
     private void handlePing(PrintWriter out) {
@@ -1419,6 +1374,11 @@ public class Peer {
                 logError("Erreur lors de la réception du fichier " + nomFichier, e);
             }
         }
+    }
+
+
+    public FileManager getFileManager(){
+        return this.fileManager;
     }
 
 }

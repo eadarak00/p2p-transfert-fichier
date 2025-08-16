@@ -789,10 +789,10 @@ public class PeerSafyUI extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 if (success) {
                     log("Upload réussi: " + filename + " vers " + ip + ":" + port);
-                    statusLabel.setText("✅ Upload terminé avec succès");
+                    statusLabel.setText("Upload terminé avec succès");
                 } else {
                     log("Échec de l'upload: " + filename);
-                    statusLabel.setText("❌ Échec de l'upload");
+                    statusLabel.setText("Échec de l'upload");
                 }
                 
                 // Actualiser les listes après un délai
@@ -802,7 +802,7 @@ public class PeerSafyUI extends JFrame {
                     public void run() {
                         SwingUtilities.invokeLater(() -> {
                             updateRemoteFiles(ip, port);
-                            statusLabel.setText("🟢 Statut: Prêt");
+                            statusLabel.setText("Statut: Prêt");
                         });
                     }
                 }, 2000);
